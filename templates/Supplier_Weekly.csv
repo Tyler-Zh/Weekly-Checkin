@@ -1,0 +1,5 @@
+reporting_week,sto,segment_type,entity_name,channel,supplier_id,tier,srm,grs_week,grs_wow_pct,grs_yoy_pct,wsc_week,wsc_wow_pct,wsc_yoy_pct,visits_yoy_pct,cvr_yoy_bps,cg_pen_pct,pbsi_pct_grs,branded_comp_bps
+2026-06-29,Decor,supplier,Glitz Home,WGS_APS,22077,T1,Zoey Li,1150000,0.05,0.63,950000,0.04,0.60,0.45,12,0.51,0.53,-30
+2026-06-29,Decor,supplier,Shenzhenshi Youlihai Keji,WGS_APS,64210,T2,Zoey Li,998000,0.03,0.72,820000,0.02,0.68,0.38,8,0.83,0.77,-20
+2026-06-29,Softhome,supplier,Bedsure International,WGS_APS,93029,T1,Tiffany Xu,850000,0.04,1.06,420000,0.03,1.02,0.98,26,0.35,0.02,120
+2026-06-29,Rugs,supplier,Lahome,WGS_APS,83624,T2,Rainbow Wu,120000,0.15,3.41,95000,0.12,3.20,0.85,18,1.00,0.15,-50

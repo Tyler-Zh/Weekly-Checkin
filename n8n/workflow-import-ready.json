@@ -1,0 +1,179 @@
+{
+  "name": "WGS APS DSR Weekly Performance Report",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger (testing)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monday 8am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE_YOUR_STAGING_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "SuMkC_Weekly"
+        },
+        "options": {}
+      },
+      "id": "read-sheet",
+      "name": "Read SuMkC_Weekly",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        280,
+        100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — WGS APS vs Vertical STO comparison\n * Input: items from Google Sheets (flat rows with channel column)\n * Output: enriched rows + portfolio/sto summaries for email builder\n */\n\nconst DSR_SUMKCS = [\n  'APS Decor - Home Accents',\n  'APS Decor - Wall Accents',\n  'APS Decor - Wall Art',\n  'APS Decor - Seasonal Decor',\n  'APS Decor - Outdoor Decor',\n  'APS Softhome - Bedding',\n  'APS Softhome - Window',\n  'APS Softhome - Bath',\n  'APS Rugs',\n];\n\nconst STO_BY_SUMKC = {\n  'APS Decor - Home Accents': 'Decor',\n  'APS Decor - Wall Accents': 'Decor',\n  'APS Decor - Wall Art': 'Decor',\n  'APS Decor - Seasonal Decor': 'Decor',\n  'APS Decor - Outdoor Decor': 'Decor',\n  'APS Softhome - Bedding': 'Softhome',\n  'APS Softhome - Window': 'Softhome',\n  'APS Softhome - Bath': 'Softhome',\n  'APS Rugs': 'Rugs',\n};\n\nconst PEN_TARGETS = {\n  Decor: 0.345,\n  Softhome: 0.245,\n  Rugs: 0.093,\n};\n\nconst VERTICAL_BENCHMARK = {\n  'APS Decor - Home Accents': 'Home Accents',\n  'APS Decor - Wall Accents': 'Wall Accents',\n  'APS Decor - Wall Art': 'Wall Art',\n  'APS Decor - Seasonal Decor': 'Seasonal Decor',\n  'APS Decor - Outdoor Decor': 'Outdoor Decor',\n  'APS Softhome - Bedding': 'Bedding',\n  'APS Softhome - Window': 'Window',\n  'APS Softhome - Bath': 'Bath',\n  'APS Rugs': 'Rugs',\n};\n\nfunction num(v) {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : null;\n}\n\nfunction pct(n) {\n  if (n === null) return '—';\n  const sign = n > 0 ? '+' : '';\n  return `${sign}${(n * 100).toFixed(1)}%`;\n}\n\nfunction bps(n) {\n  if (n === null) return '—';\n  const sign = n > 0 ? '+' : '';\n  return `${sign}${n.toFixed(0)} bps`;\n}\n\n// n8n passes sheet rows as items[].json\nconst rows = $input.all().map((item) => item.json);\n\nconst sumkcRows = rows.filter((r) => r.segment_type === 'sumkc');\n\nconst wgsRows = sumkcRows.filter(\n  (r) => r.channel === 'WGS_APS' && DSR_SUMKCS.includes(r.entity_name)\n);\nconst verticalRows = sumkcRows.filter((r) => r.channel === 'VERTICAL_STO');\n\nif (wgsRows.length < DSR_SUMKCS.length) {\n  throw new Error(\n    `Incomplete WGS weekly data: expected ${DSR_SUMKCS.length} SuMkCs, got ${wgsRows.length}. ` +\n      'Check Looker weekly export — do not use monthly GRS tracker.'\n  );\n}\n\nconst verticalMatches = DSR_SUMKCS.filter((sumkc) => {\n  const verticalName = VERTICAL_BENCHMARK[sumkc];\n  return verticalRows.some(\n    (r) => r.entity_name === verticalName || r.entity_name === sumkc.replace(/^APS /, '')\n  );\n});\n\nif (verticalMatches.length < DSR_SUMKCS.length) {\n  throw new Error(\n    `Incomplete vertical benchmark data: matched ${verticalMatches.length}/${DSR_SUMKCS.length}. ` +\n      'Each APS SuMkC needs a VERTICAL_STO row (e.g. Bedding, Rugs, Seasonal Decor).'\n  );\n}\n\nconst comparisons = [];\n\nfor (const sumkc of DSR_SUMKCS) {\n  const wgs = wgsRows.find((r) => r.entity_name === sumkc);\n  const verticalName = VERTICAL_BENCHMARK[sumkc];\n  const vertical = verticalRows.find(\n    (r) =>\n      r.entity_name === verticalName ||\n      r.vertical_benchmark === verticalName ||\n      r.entity_name === sumkc.replace(/^APS /, '')\n  );\n\n  const sto = STO_BY_SUMKC[sumkc];\n  const wgsYoy = num(wgs?.grs_yoy_pct);\n  const vertYoy = num(vertical?.grs_yoy_pct);\n  const yoyGap = wgsYoy !== null && vertYoy !== null ? wgsYoy - vertYoy : null;\n\n  const wgsPen = num(wgs?.wgs_pen_pct);\n  const penTarget = PEN_TARGETS[sto];\n  const penGap = wgsPen !== null ? wgsPen - penTarget : null;\n\n  const isTopPerformer = yoyGap !== null && yoyGap > 0.05;\n  const isConcern =\n    (yoyGap !== null && yoyGap < -0.05) ||\n    (penGap !== null && penGap < -0.02);\n\n  comparisons.push({\n    sumkc,\n    sto,\n    vertical_benchmark: verticalName,\n    wgs_grs_week: wgs?.grs_week,\n    wgs_grs_yoy_pct: wgsYoy,\n    wgs_grs_wow_pct: num(wgs?.grs_wow_pct),\n    vertical_grs_yoy_pct: vertYoy,\n    yoy_gap_vs_vertical: yoyGap,\n    yoy_gap_label: yoyGap !== null ? pct(yoyGap) + ' vs vertical' : '—',\n    wgs_pen_pct: wgsPen,\n    pen_target: penTarget,\n    pen_gap_vs_target: penGap,\n    visits_yoy_pct: num(wgs?.visits_yoy_pct),\n    cvr_yoy_bps: num(wgs?.cvr_yoy_bps),\n    is_top_performer: isTopPerformer,\n    is_area_of_concern: isConcern,\n  });\n}\n\n// STO rollups (weighted by grs_week when available)\nfunction rollupSto(stoName) {\n  const subset = comparisons.filter((c) => c.sto === stoName);\n  const totalGrs = subset.reduce((s, c) => s + (num(c.wgs_grs_week) || 0), 0);\n\n  function weightedAvg(key) {\n    let wSum = 0;\n    let vSum = 0;\n    for (const c of subset) {\n      const w = num(c.wgs_grs_week) || 0;\n      const v = c[key];\n      if (v !== null && w > 0) {\n        vSum += v * w;\n        wSum += w;\n      }\n    }\n    return wSum > 0 ? vSum / wSum : null;\n  }\n\n  return {\n    sto: stoName,\n    sumkc_count: subset.length,\n    wgs_grs_week_total: totalGrs,\n    wgs_grs_yoy_pct: weightedAvg('wgs_grs_yoy_pct'),\n    vertical_grs_yoy_pct: weightedAvg('vertical_grs_yoy_pct'),\n    yoy_gap_vs_vertical: weightedAvg('yoy_gap_vs_vertical'),\n    wgs_pen_pct: weightedAvg('wgs_pen_pct'),\n    pen_target: PEN_TARGETS[stoName],\n    top_performers: subset.filter((c) => c.is_top_performer).map((c) => c.sumkc),\n    concerns: subset.filter((c) => c.is_area_of_concern).map((c) => c.sumkc),\n  };\n}\n\nconst stoRollups = ['Decor', 'Softhome', 'Rugs'].map(rollupSto);\n\nconst portfolio = {\n  segment_type: 'portfolio',\n  wgs_grs_week_total: stoRollups.reduce((s, r) => s + (r.wgs_grs_week_total || 0), 0),\n  sto_rollups: stoRollups,\n  top_performers: comparisons.filter((c) => c.is_top_performer).slice(0, 5),\n  areas_of_concern: comparisons.filter((c) => c.is_area_of_concern).slice(0, 5),\n  reporting_week: rows[0]?.reporting_week ?? null,\n};\n\nreturn [\n  {\n    json: {\n      portfolio,\n      comparisons,\n      sto_rollups: stoRollups,\n      meta: {\n        source: 'weekly_staging_sheet',\n        not_monthly_tracker: true,\n        validated_sumkc_count: wgsRows.length,\n      },\n    },\n  },\n];\n"
+      },
+      "id": "compare-wgs-vertical",
+      "name": "Compare WGS vs Vertical",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Build HTML email from compare-wgs-vertical output\n * Input: single item from previous Code node\n * Output: { subject, html } for Gmail node\n */\n\nconst PEN_TARGETS = { Decor: 0.345, Softhome: 0.245, Rugs: 0.093 };\n\nfunction fmtPct(n) {\n  if (n === null || n === undefined || Number.isNaN(n)) return '—';\n  const sign = n > 0 ? '+' : '';\n  return `${sign}${(n * 100).toFixed(1)}%`;\n}\n\nfunction fmtMoney(n) {\n  if (n === null || n === undefined || Number.isNaN(n)) return '—';\n  const v = Number(n);\n  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;\n  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;\n  return `$${v.toFixed(0)}`;\n}\n\nfunction fmtPp(n) {\n  if (n === null || n === undefined || Number.isNaN(n)) return '—';\n  const sign = n > 0 ? '+' : '';\n  return `${sign}${(n * 100).toFixed(1)}pp`;\n}\n\nconst data = $input.first().json;\nconst { portfolio, comparisons, sto_rollups: stoRollups } = data;\nconst week = portfolio.reporting_week ?? 'Latest week';\n\nlet html = `\n<div style=\"font-family: Arial, sans-serif; max-width: 720px; color: #222;\">\n  <h2 style=\"border-bottom: 2px solid #7B2D8E; padding-bottom: 8px;\">\n    WGS APS DSR Weekly Performance\n  </h2>\n  <p style=\"color: #555;\">Reporting week ending: <strong>${week}</strong><br>\n  Lens: <strong>WGS/APS vs Vertical STO (F&amp;D)</strong></p>\n`;\n\n// Portfolio headline\nhtml += `<h3>Portfolio headline</h3><table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 100%; font-size: 13px;\">\n<tr style=\"background: #f3f3f3;\"><th>STO</th><th>WGS GRS (week)</th><th>WGS YoY</th><th>Vertical YoY</th><th>Gap vs vertical</th><th>WGS Pen</th><th>Pen target</th></tr>`;\n\nfor (const s of stoRollups) {\n  const penGap = s.wgs_pen_pct != null ? s.wgs_pen_pct - s.pen_target : null;\n  const gapColor = (s.yoy_gap_vs_vertical ?? 0) >= 0 ? '#0a7' : '#c33';\n  html += `<tr>\n    <td><strong>${s.sto}</strong></td>\n    <td>${fmtMoney(s.wgs_grs_week_total)}</td>\n    <td>${fmtPct(s.wgs_grs_yoy_pct)}</td>\n    <td>${fmtPct(s.vertical_grs_yoy_pct)}</td>\n    <td style=\"color:${gapColor}\"><strong>${fmtPp(s.yoy_gap_vs_vertical)}</strong></td>\n    <td>${fmtPct(s.wgs_pen_pct)}</td>\n    <td>${fmtPct(s.pen_target)} ${penGap !== null && penGap < -0.02 ? '⚠' : ''}</td>\n  </tr>`;\n}\nhtml += `</table>`;\n\n// SuMkC detail\nhtml += `<h3>SuMkC performance (WGS vs vertical)</h3><table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse: collapse; width: 100%; font-size: 12px;\">\n<tr style=\"background: #f3f3f3;\"><th>STO</th><th>APS SuMkC</th><th>Vertical</th><th>WGS GRS</th><th>WGS YoY</th><th>Vert YoY</th><th>Gap</th></tr>`;\n\nfor (const c of comparisons) {\n  const gapColor = (c.yoy_gap_vs_vertical ?? 0) >= 0 ? '#0a7' : '#c33';\n  const flag = c.is_top_performer ? ' ★' : c.is_area_of_concern ? ' ⚠' : '';\n  html += `<tr>\n    <td>${c.sto}</td>\n    <td>${c.sumkc}${flag}</td>\n    <td>${c.vertical_benchmark}</td>\n    <td>${fmtMoney(c.wgs_grs_week)}</td>\n    <td>${fmtPct(c.wgs_grs_yoy_pct)}</td>\n    <td>${fmtPct(c.vertical_grs_yoy_pct)}</td>\n    <td style=\"color:${gapColor}\">${fmtPp(c.yoy_gap_vs_vertical)}</td>\n  </tr>`;\n}\nhtml += `</table>`;\n\n// Top / concern bullets\nhtml += `<h3>Top performers (WGS beating vertical by &gt;5pp YoY)</h3><ul>`;\nif (portfolio.top_performers.length === 0) {\n  html += `<li><em>None this week</em></li>`;\n} else {\n  for (const c of portfolio.top_performers) {\n    html += `<li><strong>${c.sumkc}</strong>: WGS ${fmtPct(c.wgs_grs_yoy_pct)} vs vertical ${fmtPct(c.vertical_grs_yoy_pct)} (${fmtPp(c.yoy_gap_vs_vertical)})</li>`;\n  }\n}\nhtml += `</ul>`;\n\nhtml += `<h3>Areas of concern</h3><ul>`;\nif (portfolio.areas_of_concern.length === 0) {\n  html += `<li><em>None flagged</em></li>`;\n} else {\n  for (const c of portfolio.areas_of_concern) {\n    const penNote =\n      c.pen_gap_vs_target != null && c.pen_gap_vs_target < -0.02\n        ? `; pen ${fmtPp(c.pen_gap_vs_target)} below OKR`\n        : '';\n    html += `<li><strong>${c.sumkc}</strong>: ${fmtPp(c.yoy_gap_vs_vertical)} vs vertical${penNote}</li>`;\n  }\n}\nhtml += `</ul>`;\n\nhtml += `<p style=\"font-size: 11px; color: #888; margin-top: 24px;\">\n  This email was sent automatically with n8n · WGS APS Decor · Softhome · Rugs<br>\n  Data source: weekly staging sheet (not monthly F&amp;D GRS tracker)\n</p></div>`;\n\nconst subject = `WGS APS DSR Weekly | ${week} | Decor/Softhome/Rugs`;\n\nreturn [{ json: { subject, html, portfolio, comparisons } }];\n"
+      },
+      "id": "build-html",
+      "name": "Build HTML Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@wayfair.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "gmail-send",
+      "name": "Gmail Send",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger (testing)": {
+      "main": [
+        [
+          {
+            "node": "Read SuMkC_Weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday 8am ET": {
+      "main": [
+        [
+          {
+            "node": "Read SuMkC_Weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read SuMkC_Weekly": {
+      "main": [
+        [
+          {
+            "node": "Compare WGS vs Vertical",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare WGS vs Vertical": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Gmail Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

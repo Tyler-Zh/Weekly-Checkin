@@ -1,0 +1,121 @@
+{
+  "name": "WGS APS DSR Weekly Performance Report",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger (testing)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monday 8am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 200],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE_YOUR_STAGING_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "SuMkC_Weekly"
+        },
+        "options": {}
+      },
+      "id": "read-sheet",
+      "name": "Read SuMkC_Weekly",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 100],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "PASTE_CONTENTS_OF_n8n/compare-wgs-vertical.js"
+      },
+      "id": "compare-wgs-vertical",
+      "name": "Compare WGS vs Vertical",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "PASTE_CONTENTS_OF_n8n/build-html-email.js"
+      },
+      "id": "build-html",
+      "name": "Build HTML Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 100]
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@wayfair.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "gmail-send",
+      "name": "Gmail Send",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1000, 100],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger (testing)": {
+      "main": [[{ "node": "Read SuMkC_Weekly", "type": "main", "index": 0 }]]
+    },
+    "Monday 8am ET": {
+      "main": [[{ "node": "Read SuMkC_Weekly", "type": "main", "index": 0 }]]
+    },
+    "Read SuMkC_Weekly": {
+      "main": [[{ "node": "Compare WGS vs Vertical", "type": "main", "index": 0 }]]
+    },
+    "Compare WGS vs Vertical": {
+      "main": [[{ "node": "Build HTML Email", "type": "main", "index": 0 }]]
+    },
+    "Build HTML Email": {
+      "main": [[{ "node": "Gmail Send", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
