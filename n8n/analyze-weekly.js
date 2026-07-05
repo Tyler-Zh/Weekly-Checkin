@@ -1,7 +1,4 @@
 /**
- * Deprecated — use analyze-weekly.js. Kept for backward compatibility.
- */
-/**
  * AUTO-GENERATED from lib/weekly-report.mjs — run: node scripts/sync-n8n-from-lib.mjs
  */
 

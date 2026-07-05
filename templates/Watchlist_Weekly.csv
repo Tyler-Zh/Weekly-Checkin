@@ -1,5 +1,7 @@
 reporting_week,sto,watch_type,entity_name,supplier_id,srm,detail,l30d_grs_at_risk
-2026-06-29,Decor,pbsi_violation,Example Supplier A,12345,Zoey Li,3+ month PBSI violation SKUs,45000
-2026-06-29,Decor,promo_wsi_gap,Example Supplier B,67890,Ivy Mao,WSI gap -250 bps vs target,12000
-2026-06-29,Decor,pen_below_target,Decor STO,portfolio,Tyler Zhu,WGS pen 31.5% vs target 34.5%,0
-2026-06-29,Softhome,pen_below_target,Softhome STO,portfolio,Tyler Zhu,WGS pen 22.3% vs target 24.5%,0
+2026-06-29,Decor,pbsi_violation,Wall Accents Offender Co,99001,Ivy Mao,3+ month PBSI violation SKUs — 22% of GRS at risk,92000
+2026-06-29,Decor,promo_wsi_gap,Wall Accents Offender Co,99001,Ivy Mao,Promo WSI gap -200 bps vs category target — shallow event depth,42000
+2026-06-29,Softhome,pbsi_violation,Bath Underperformer Ltd,99002,Tiffany Xu,PBSI policy drag + availability -190 bps vs vertical,28000
+2026-06-29,Decor,pen_below_target,Decor STO,portfolio,Tyler Zhu,WGS pen 31.5% vs OKR target 34.5% (-300 bps),0
+2026-06-29,Softhome,pen_below_target,Softhome STO,portfolio,Tyler Zhu,WGS pen 22.3% vs OKR target 24.5% (-220 bps),0
+2026-06-29,Rugs,promo_wsi_gap,Rug Value Supplier,99003,Rainbow Wu,Promo depth -110 bps; ads 5% WSC vs Rugs norm 10%,15000

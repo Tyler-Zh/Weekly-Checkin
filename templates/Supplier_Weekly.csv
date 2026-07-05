@@ -1,5 +1,8 @@
-reporting_week,sto,segment_type,entity_name,channel,supplier_id,tier,srm,grs_week,grs_wow_pct,grs_yoy_pct,wsc_week,wsc_wow_pct,wsc_yoy_pct,visits_yoy_pct,cvr_yoy_bps,cg_pen_pct,pbsi_pct_grs,branded_comp_bps
-2026-06-29,Decor,supplier,Glitz Home,WGS_APS,22077,T1,Zoey Li,1150000,0.05,0.63,950000,0.04,0.60,0.45,12,0.51,0.53,-30
-2026-06-29,Decor,supplier,Shenzhenshi Youlihai Keji,WGS_APS,64210,T2,Zoey Li,998000,0.03,0.72,820000,0.02,0.68,0.38,8,0.83,0.77,-20
-2026-06-29,Softhome,supplier,Bedsure International,WGS_APS,93029,T1,Tiffany Xu,850000,0.04,1.06,420000,0.03,1.02,0.98,26,0.35,0.02,120
-2026-06-29,Rugs,supplier,Lahome,WGS_APS,83624,T2,Rainbow Wu,120000,0.15,3.41,95000,0.12,3.20,0.85,18,1.00,0.15,-50
+reporting_week,sto,segment_type,entity_name,channel,supplier_id,tier,srm,grs_week,grs_wow_pct,grs_yoy_pct,wsc_week,wsc_wow_pct,wsc_yoy_pct,vertical_grs_yoy_pct,visits_yoy_pct,cvr_yoy_bps,cg_pen_pct,availability_bps,branded_comp_bps,promo_depth_bps,ads_pct_wsc,pbsi_pct_grs
+2026-06-29,Decor,supplier,Glitz Home,WGS_APS,22077,T1,Zoey Li,1150000,0.05,0.63,950000,0.04,0.60,0.12,0.45,12,0.51,-30,-30,-40,0.11,0.05
+2026-06-29,Decor,supplier,Shenzhenshi Youlihai Keji,WGS_APS,64210,T2,Zoey Li,998000,0.03,0.72,820000,0.02,0.68,0.12,0.38,8,0.83,-20,-20,-25,0.09,0.08
+2026-06-29,Decor,supplier,Wall Accents Offender Co,WGS_APS,99001,T2,Ivy Mao,420000,-0.04,-0.15,310000,-0.05,-0.18,0.05,-0.12,-55,0.22,-220,-180,-200,0.04,0.22
+2026-06-29,Softhome,supplier,Bedsure International,WGS_APS,93029,T1,Tiffany Xu,850000,0.04,1.06,420000,0.03,1.02,0.45,0.98,26,0.35,100,120,55,0.13,0.02
+2026-06-29,Softhome,supplier,Bath Underperformer Ltd,WGS_APS,99002,T2,Tiffany Xu,85000,-0.02,-0.22,42000,-0.03,-0.25,0.20,-0.18,-40,0.18,-190,-120,-180,0.03,0.18
+2026-06-29,Rugs,supplier,Lahome,WGS_APS,83624,T2,Rainbow Wu,120000,0.15,3.41,95000,0.12,3.20,0.50,0.85,18,1.00,-50,-50,40,0.15,0.15
+2026-06-29,Rugs,supplier,Rug Value Supplier,WGS_APS,99003,T2,Rainbow Wu,95000,-0.03,-0.08,72000,-0.04,-0.10,0.50,0.05,-15,0.45,-90,-70,-110,0.05,0.12

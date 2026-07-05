@@ -55,7 +55,32 @@ Each week, before Monday:
 
 4. You need **18 rows** minimum (9 WGS + 9 vertical) on `SuMkC_Weekly`
 
-Percentages in the sheet should be **decimals**: `0.281` = +28.1% YoY.
+| `promo_depth_bps` | Promo depth vs benchmark | bps |
+| `ads_pct_wsc` | Ads spend % of WSC | decimal |
+| `visits_wow_pct` | Traffic WoW | decimal |
+
+Percentages as **decimals**. Pen targets apply at **STO rollup**, not per SuMkC.
+
+---
+
+## Step 3b — Supplier & watchlist tabs (comprehensive email)
+
+For sections 6–7 of the email, also update weekly:
+
+| Tab | Template | Looker source |
+|-----|----------|---------------|
+| `Supplier_Weekly` | `templates/Supplier_Weekly.csv` | Looker 18715 — managed T1/T2 suppliers |
+| `Watchlist_Weekly` | `templates/Watchlist_Weekly.csv` | Looker 13199 — PBSI, promo WSI, pen gaps |
+
+**n8n:** add Google Sheets Read nodes for each tab → **Merge** → **Analyze Weekly** node (replaces Compare node).
+
+Until then, SuMkC-only still works; supplier/watchlist sections show “no data.”
+
+Regenerate preview after template changes:
+
+```bash
+node scripts/preview-email.mjs   # opens preview/email-preview.html
+```
 
 ---
 
@@ -70,20 +95,24 @@ Percentages in the sheet should be **decimals**: `0.281` = +28.1% YoY.
 
 ## Step 5 — Import n8n workflow (30 min)
 
+Full flow diagram: [`n8n/README.md`](../n8n/README.md)
+
 ### Option A — Import ready workflow (recommended)
 
 1. n8n → **Workflows** → **Import from File**
-2. Select `n8n/workflow-import-ready.json` (Code nodes already populated)
-3. **Read SuMkC_Weekly** node → paste your Sheet ID, sheet name `SuMkC_Weekly`
-4. **Gmail Send** node → set your email address
-5. Connect Google Sheets + Gmail credentials
+2. Select `n8n/workflow-import-ready.json`
+3. On **all 3** Google Sheets nodes (`SuMkC_Weekly`, `Supplier_Weekly`, `Watchlist_Weekly`):
+   - Credential → your Google Sheets account
+   - Document ID → staging sheet ID
+4. **Gmail Send** → credential + your email
+5. **Execute workflow** (Manual Trigger)
 
 ### Option B — Import skeleton
 
 1. n8n → **Workflows** → **Import from File**
 2. Select `n8n/workflow-import.json`
 3. Open each **Code** node and paste:
-   - **Compare WGS vs Vertical** → full contents of `n8n/compare-wgs-vertical.js`
+   - **Analyze Weekly** → `n8n/analyze-weekly.js` (or run `node scripts/sync-n8n-from-lib.mjs` after editing `lib/weekly-report.mjs`)
    - **Build HTML Email** → full contents of `n8n/build-html-email.js`
 4. **Read SuMkC_Weekly** node → paste your Sheet ID, sheet name `SuMkC_Weekly`
 5. **Gmail Send** → set `YOUR_EMAIL@wayfair.com`

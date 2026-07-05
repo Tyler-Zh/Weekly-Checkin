@@ -1,5 +1,5 @@
 {
-  "name": "WGS APS DSR Weekly Performance Report",
+  "name": "WGS APS DSR Weekly Check-in",
   "nodes": [
     {
       "parameters": {},
@@ -7,7 +7,7 @@
       "name": "Manual Trigger (testing)",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [0, 300]
     },
     {
       "parameters": {
@@ -24,11 +24,12 @@
       "name": "Monday 8am ET",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [0, 200],
+      "position": [0, 500],
       "disabled": true
     },
     {
       "parameters": {
+        "operation": "read",
         "documentId": {
           "__rl": true,
           "mode": "id",
@@ -41,11 +42,11 @@
         },
         "options": {}
       },
-      "id": "read-sheet",
+      "id": "read-sumkc",
       "name": "Read SuMkC_Weekly",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [280, 100],
+      "position": [280, 180],
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "CONFIGURE_IN_N8N",
@@ -55,13 +56,78 @@
     },
     {
       "parameters": {
-        "jsCode": "PASTE_CONTENTS_OF_n8n/compare-wgs-vertical.js"
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE_YOUR_STAGING_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Supplier_Weekly"
+        },
+        "options": {}
       },
-      "id": "compare-wgs-vertical",
-      "name": "Compare WGS vs Vertical",
+      "id": "read-supplier",
+      "name": "Read Supplier_Weekly",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 340],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "PASTE_YOUR_STAGING_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Watchlist_Weekly"
+        },
+        "options": {}
+      },
+      "id": "read-watchlist",
+      "name": "Read Watchlist_Weekly",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 500],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_IN_N8N",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3
+      },
+      "id": "merge-tabs",
+      "name": "Merge All Tabs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [520, 340]
+    },
+    {
+      "parameters": {
+        "jsCode": "PASTE_CONTENTS_OF_n8n/analyze-weekly.js"
+      },
+      "id": "analyze-weekly",
+      "name": "Analyze Weekly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [520, 100]
+      "position": [760, 340]
     },
     {
       "parameters": {
@@ -71,7 +137,7 @@
       "name": "Build HTML Email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [760, 100]
+      "position": [1000, 340]
     },
     {
       "parameters": {
@@ -85,26 +151,59 @@
       "name": "Gmail Send",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1000, 100],
+      "position": [1240, 340],
       "credentials": {
         "gmailOAuth2": {
           "id": "CONFIGURE_IN_N8N",
           "name": "Gmail account"
         }
       }
+    },
+    {
+      "parameters": {
+        "content": "## WGS APS DSR Weekly Check-in\n\n**Before first run:**\n1. Replace `PASTE_YOUR_STAGING_SHEET_ID` on all 3 Google Sheets nodes\n2. Set Gmail **To** address\n3. Connect **Google Sheets account** + **Gmail** credentials on each node\n4. Test with **Manual Trigger** → then enable **Monday 8am ET**\n\n**Sheet tabs required:** SuMkC_Weekly (18 rows), Supplier_Weekly, Watchlist_Weekly",
+        "height": 220,
+        "width": 380
+      },
+      "id": "sticky-note",
+      "name": "Setup instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0]
     }
   ],
   "connections": {
     "Manual Trigger (testing)": {
-      "main": [[{ "node": "Read SuMkC_Weekly", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          { "node": "Read SuMkC_Weekly", "type": "main", "index": 0 },
+          { "node": "Read Supplier_Weekly", "type": "main", "index": 0 },
+          { "node": "Read Watchlist_Weekly", "type": "main", "index": 0 }
+        ]
+      ]
     },
     "Monday 8am ET": {
-      "main": [[{ "node": "Read SuMkC_Weekly", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          { "node": "Read SuMkC_Weekly", "type": "main", "index": 0 },
+          { "node": "Read Supplier_Weekly", "type": "main", "index": 0 },
+          { "node": "Read Watchlist_Weekly", "type": "main", "index": 0 }
+        ]
+      ]
     },
     "Read SuMkC_Weekly": {
-      "main": [[{ "node": "Compare WGS vs Vertical", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Merge All Tabs", "type": "main", "index": 0 }]]
     },
-    "Compare WGS vs Vertical": {
+    "Read Supplier_Weekly": {
+      "main": [[{ "node": "Merge All Tabs", "type": "main", "index": 1 }]]
+    },
+    "Read Watchlist_Weekly": {
+      "main": [[{ "node": "Merge All Tabs", "type": "main", "index": 2 }]]
+    },
+    "Merge All Tabs": {
+      "main": [[{ "node": "Analyze Weekly", "type": "main", "index": 0 }]]
+    },
+    "Analyze Weekly": {
       "main": [[{ "node": "Build HTML Email", "type": "main", "index": 0 }]]
     },
     "Build HTML Email": {

@@ -10,12 +10,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = JSON.parse(
   readFileSync(join(root, 'n8n/workflow-import.json'), 'utf8')
 );
-const compareJs = readFileSync(join(root, 'n8n/compare-wgs-vertical.js'), 'utf8');
+const analyzeJs = readFileSync(join(root, 'n8n/analyze-weekly.js'), 'utf8');
 const emailJs = readFileSync(join(root, 'n8n/build-html-email.js'), 'utf8');
 
 for (const node of workflow.nodes) {
-  if (node.id === 'compare-wgs-vertical') {
-    node.parameters.jsCode = compareJs;
+  if (node.id === 'analyze-weekly') {
+    node.parameters.jsCode = analyzeJs;
   }
   if (node.id === 'build-html') {
     node.parameters.jsCode = emailJs;
