@@ -1,0 +1,85 @@
+{
+  "_comment": "Copy to bigquery-sources.json and validate with your analytics partner. SQL reads this via inline lists below.",
+  "reporting": {
+    "timezone": "America/New_York",
+    "week_starts_on": "SUNDAY",
+    "wfus_soid": 49,
+    "store_filter_comment": "Wayfair US = SoID 49; confirm with Looker 18715 filters"
+  },
+  "primary_fact_table": {
+    "project": "wf-gcp-us-ae-btde-prod",
+    "dataset": "curated_core",
+    "table": "tbl_daily_order_financials",
+    "full_name": "wf-gcp-us-ae-btde-prod.curated_core.tbl_daily_order_financials",
+    "date_column": "OrderDate_EST",
+    "grs_column": "GRS",
+    "wsc_column_comment": "Use ads/WSC table if not on fact — weekly_class_opportunity_report_metrics has WSC",
+    "aps_flag_column": "IsAPSSupplier",
+    "pbsi_flag_column": "IsPBSISKU",
+    "vertical_column": "Vertical",
+    "mkc_column": "MkcName",
+    "sumkc_column_candidate": "MkcName",
+    "sumkc_column_note": "Validated: use MkcName + dsr_mkc_mapping CTE (see sql/bigquery/00_dsr_mkc_mapping.sql). SecondLevelMap is NOT APS SuMkC.",
+    "mkc_mapping_file": "sql/bigquery/00_dsr_mkc_mapping.sql"
+  },
+  "optional_tables": {
+    "weekly_class_metrics": "wf-gcp-us-ae-ad-analytics-prod.business_analytics.weekly_class_opportunity_report_metrics",
+    "category_participation": "wf-gcp-us-ae-ad-analytics-prod.business_analytics.category_participation",
+    "visits_comment": "COSMOS tbl_daily_visits or Looker 13199 explore — add when validated",
+    "attributed_financials_legacy": "wf-gcp-us-ae-mktg-prod.curated_order.tbl_fact_attributed_financials"
+  },
+  "dsr_sumkcs": [
+    "APS Decor - Home Accents",
+    "APS Decor - Wall Accents",
+    "APS Decor - Wall Art",
+    "APS Decor - Seasonal Decor",
+    "APS Decor - Outdoor Decor",
+    "APS Softhome - Bedding",
+    "APS Softhome - Window",
+    "APS Softhome - Bath",
+    "APS Rugs"
+  ],
+  "vertical_benchmark_by_sumkc": {
+    "APS Decor - Home Accents": "Home Accents",
+    "APS Decor - Wall Accents": "Wall Accents",
+    "APS Decor - Wall Art": "Wall Art",
+    "APS Decor - Seasonal Decor": "Seasonal Decor",
+    "APS Decor - Outdoor Decor": "Outdoor Decor",
+    "APS Softhome - Bedding": "Bedding",
+    "APS Softhome - Window": "Window",
+    "APS Softhome - Bath": "Bath",
+    "APS Rugs": "Rugs"
+  },
+  "sto_by_sumkc": {
+    "APS Decor - Home Accents": "Decor",
+    "APS Decor - Wall Accents": "Decor",
+    "APS Decor - Wall Art": "Decor",
+    "APS Decor - Seasonal Decor": "Decor",
+    "APS Decor - Outdoor Decor": "Decor",
+    "APS Softhome - Bedding": "Softhome",
+    "APS Softhome - Window": "Softhome",
+    "APS Softhome - Bath": "Softhome",
+    "APS Rugs": "Rugs"
+  },
+  "vertical_fd_filter": {
+    "column": "Vertical",
+    "values": ["Furniture & Decor"],
+    "note": "Validated on tbl_daily_order_financials for vertical STO rows"
+  },
+  "mkc_to_sumkc_mapping": [
+    {"mkc_name": "Decorative Accent - Home Accents", "wgs_entity": "APS Decor - Home Accents", "vertical_entity": "Home Accents", "sto": "Decor"},
+    {"mkc_name": "Decorative Accent - Wall Accents", "wgs_entity": "APS Decor - Wall Accents", "vertical_entity": "Wall Accents", "sto": "Decor"},
+    {"mkc_name": "Wall Art", "wgs_entity": "APS Decor - Wall Art", "vertical_entity": "Wall Art", "sto": "Decor"},
+    {"mkc_name": "Seasonal Decor", "wgs_entity": "APS Decor - Seasonal Decor", "vertical_entity": "Seasonal Decor", "sto": "Decor"},
+    {"mkc_name": "Outdoor Decor", "wgs_entity": "APS Decor - Outdoor Decor", "vertical_entity": "Outdoor Decor", "sto": "Decor"},
+    {"mkc_name": "Bedding", "wgs_entity": "APS Softhome - Bedding", "vertical_entity": "Bedding", "sto": "Softhome"},
+    {"mkc_name": "Window", "wgs_entity": "APS Softhome - Window", "vertical_entity": "Window", "sto": "Softhome"},
+    {"mkc_name": "Bath", "wgs_entity": "APS Softhome - Bath", "vertical_entity": "Bath", "sto": "Softhome"},
+    {"mkc_name": "Rugs", "wgs_entity": "APS Rugs", "vertical_entity": "Rugs", "sto": "Rugs"}
+  ],
+  "supplier_tiers": ["T1", "T2"],
+  "n8n_output_contract": {
+    "description": "Each row must match analyzeWeeklyRows() input — same as templates/*.csv",
+    "required_segment_types": ["sumkc", "supplier", "watchlist"]
+  }
+}

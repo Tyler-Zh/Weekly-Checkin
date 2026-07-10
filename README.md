@@ -12,6 +12,8 @@ The [F&D NA Category & Supplier GRS tracker](https://docs.google.com/spreadsheet
 |--------|------|-----|
 | Weekly Looker (category/PBSI/promo) | [Dashboard 13199](https://wayfair.cloud.looker.com/dashboards/13199) | Standup tables |
 | Weekly Category/Class Looker | [Dashboard 18715](https://wayfair.cloud.looker.com/dashboards/18715) | SuMkC + supplier weekly |
+| Looker API automation (v2) | [docs/LOOKER-V2.md](docs/LOOKER-V2.md) | n8n pulls data — no manual paste |
+| **BigQuery automation (v3)** | [docs/BIGQUERY.md](docs/BIGQUERY.md) | n8n BigQuery node → unified SQL |
 | F&D weekly pattern (reference) | [RF Connected Sheet](https://docs.google.com/spreadsheets/d/1_kFyDbYZIUrU1BG2oKaix23OE9PiwVZPoLpatx-hDI0/edit) → [RF CS: F&D Only](https://docs.google.com/spreadsheets/d/14iOYHlU6JSrU1PVtVjJr7bWmn1mLvMI4GbXrDyVsw-M/edit) | Apps Script + weekly tabs |
 | OKR pen targets | [2026 WGS OKR](https://docs.google.com/spreadsheets/d/1T1raAGWVpw_lpPOY1MWECm4k3MF3M18Lm9LhDGcZQAo) | Static targets only |
 
@@ -20,6 +22,8 @@ The [F&D NA Category & Supplier GRS tracker](https://docs.google.com/spreadsheet
 | Path | Purpose |
 |------|---------|
 | `docs/BUILD.md` | Step-by-step build guide |
+| `docs/BIGQUERY.md` | BigQuery v3 weekly read template |
+| `docs/LOOKER-V2.md` | Looker API v2 automation |
 | `docs/WGS-APS-DSR-Weekly-Report-SPEC.md` | Full workflow spec |
 | `templates/*.csv` | Google Sheet import templates |
 | `n8n/compare-wgs-vertical.js` | WGS vs vertical logic |
